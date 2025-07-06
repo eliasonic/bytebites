@@ -75,19 +75,19 @@ java -jar auth-service/target/*.jar
 1. **Login to Obtain JWT**
 
    ```
-   POST /auth/login
+   POST /api/v1/auth/login
    ```
 
 2. **Retrieve Restaurant Options**
 
    ```
-   GET /api/restaurants
+   GET /api/v1/restaurants
    ```
 
 3. **Place an Order**
 
    ```
-   POST /api/orders
+   POST /api/v1/orders
    ```
 ---
 
@@ -98,13 +98,13 @@ java -jar auth-service/target/*.jar
 2. **Create a New Restaurant**
 
    ```
-   POST /api/restaurants
+   POST /api/v1/restaurants
    ```
 
 3. **Add Menu Items**
 
    ```
-   POST /api/restaurants/{restaurantId}/menu-items
+   POST /api/v1/restaurants/{restaurantId}/menu-items
    ```
 
 ---
