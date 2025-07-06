@@ -16,8 +16,8 @@ FROM openjdk:21-bullseye
 
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar /app/eureka-server.jar
+COPY --from=build /app/target/*.jar /app/eureka_server.jar
 
 EXPOSE 8761
 
-ENTRYPOINT ["java", "-jar", "/app/eureka-server.jar"]
+ENTRYPOINT ["java", "-jar", "/app/eureka_server.jar"]
