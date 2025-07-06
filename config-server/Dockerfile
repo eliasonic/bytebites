@@ -16,8 +16,8 @@ FROM openjdk:21-bullseye
 
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar /app/config-server.jar
+COPY --from=build /app/target/*.jar /app/config_server.jar
 
 EXPOSE 8888
 
-ENTRYPOINT ["java", "-jar", "/app/config-server.jar"]
+ENTRYPOINT ["java", "-jar", "/app/config_server.jar"]
