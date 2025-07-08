@@ -35,7 +35,6 @@ public class OrderServiceImpl implements OrderService {
     @PreAuthorize("hasRole('CUSTOMER')")
     public OrderDto placeOrder(OrderDto orderDto, String customerId) {
         Order order = orderMapper.toEntity(orderDto);
-
         order.setCustomerId(customerId);
         order.setStatus(OrderStatus.PENDING);
 
