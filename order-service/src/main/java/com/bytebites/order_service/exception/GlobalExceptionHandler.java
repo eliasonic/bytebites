@@ -4,27 +4,44 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Global exception handler for handling exceptions from all controllers.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
-        ErrorResponse errorResponse = buildErrorResponse(e, null,"FORBIDDEN");
-        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .collect(HashMap::new,
+                        (map, fieldError) -> map.put(fieldError.getField(), fieldError.getDefaultMessage()),
+                        HashMap::putAll);
+
+        ValidationErrorResponse validationErrorResponse = new ValidationErrorResponse(
+                LocalDateTime.now(),
+                "Validation failed",
+                "Invalid request payload",
+                "VALIDATION_FAILED",
+                errors);
+        return new ResponseEntity<>(validationErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleAuthError(AuthenticationException e) {
-        ErrorResponse errorResponse = buildErrorResponse(e, null,"UNAUTHORIZED");
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        ErrorResponse errorResponse = buildErrorResponse(ex, null,"FORBIDDEN");
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
