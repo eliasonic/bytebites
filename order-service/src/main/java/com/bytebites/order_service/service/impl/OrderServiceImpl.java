@@ -1,15 +1,15 @@
 package com.bytebites.order_service.service.impl;
 
 import com.bytebites.order_service.config.RabbitMQConfig;
+import com.bytebites.order_service.dto.CreateOrderDto;
 import com.bytebites.order_service.dto.OrderDto;
 import com.bytebites.order_service.dto.OrderItemDto;
 import com.bytebites.order_service.entity.Order;
 import com.bytebites.order_service.entity.OrderItem;
 import com.bytebites.order_service.entity.OrderStatus;
 import com.bytebites.order_service.event.OrderPlacedEvent;
-import com.bytebites.order_service.mapper.OrderItemMapper;
+import com.bytebites.order_service.exception.ResourceNotFoundException;
 import com.bytebites.order_service.mapper.OrderMapper;
-import com.bytebites.order_service.repository.OrderItemRepository;
 import com.bytebites.order_service.repository.OrderRepository;
 import com.bytebites.order_service.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -26,19 +26,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
     private final OrderMapper orderMapper;
-    private final OrderItemMapper orderItemMapper;
     private final RabbitTemplate rabbitTemplate;
+    private final RabbitMQConfig rabbitMQConfig;
 
     @Transactional
     @PreAuthorize("hasRole('CUSTOMER')")
-    public OrderDto placeOrder(OrderDto orderDto, String customerId) {
-        Order order = orderMapper.toEntity(orderDto);
+    public OrderDto placeOrder(CreateOrderDto createOrderDto, String customerId) {
+        Order order = orderMapper.toEntity(createOrderDto);
         order.setCustomerId(customerId);
         order.setStatus(OrderStatus.PENDING);
 
-        double totalAmount = orderDto.items().stream()
+        double totalAmount = createOrderDto.items().stream()
                 .mapToDouble(item -> item.price() * item.quantity())
                 .sum();
         order.setTotalAmount(totalAmount);
@@ -66,6 +65,25 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public OrderDto getOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        return orderMapper.toDto(order);
+    }
+
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public OrderDto updateOrderStatus(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        order.setStatus(status);
+        Order updatedOrder = orderRepository.save(order);
+        return orderMapper.toDto(updatedOrder);
+    }
+
+
     private void publishOrderPlacedEvent(Order order) {
         OrderPlacedEvent event = new OrderPlacedEvent(
                 order.getId(),
@@ -75,8 +93,8 @@ public class OrderServiceImpl implements OrderService {
                 order.getCreatedAt()
         );
         rabbitTemplate.convertAndSend(
-                RabbitMQConfig.EXCHANGE,
-                RabbitMQConfig.ROUTING_KEY,
+                rabbitMQConfig.getExchange(),
+                rabbitMQConfig.getBindingKey(),
                 event
         );
     }
