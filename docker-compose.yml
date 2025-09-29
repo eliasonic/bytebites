@@ -3,34 +3,36 @@ services:
     image: postgres:latest
     container_name: postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: rootUser
+      POSTGRES_DB: auth_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   rabbitmq:
-    image: rabbitmq:latest
+    image: rabbitmq:3-management
     container_name: rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    hostname: rabbitmq
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management console port
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
 
-  app:
-    build: .
-    container_name: pt-app
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-    env_file: .env
+#  app:
+#    build: .
+#    container_name: pt-app
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - postgres
+#    env_file: .env
 
 volumes:
   postgres_data:
