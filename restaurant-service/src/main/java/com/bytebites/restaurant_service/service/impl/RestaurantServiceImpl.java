@@ -44,6 +44,13 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
 
     public void startOrderPreparation(OrderPlacedEvent event) {
+        boolean exists = restaurantOrderRepository.existsByOrderId(event.orderId());
+
+        if (exists) {
+            log.info("Order {} already exists. Skipping duplicate event processing.", event.orderId());
+            return;
+        }
+
         RestaurantOrder order = new RestaurantOrder();
         order.setOrderId(event.orderId());
         order.setRestaurantId(event.restaurantId());

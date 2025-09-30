@@ -23,4 +23,4 @@ spring:
           writetimeout: 5000
 
 mail:
-  from: ByteBites <${MAIL_USER}>
+  from: ${MAIL_USER}

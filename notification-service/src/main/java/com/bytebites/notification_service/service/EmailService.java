@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 @Service
@@ -20,7 +21,7 @@ public class EmailService {
     private final TemplateEngine templateEngine;
     private final MailConfig mailConfig;
 
-    public void sendOrderConfirmation(OrderPlacedEvent event) throws MessagingException {
+    public void sendOrderConfirmation(OrderPlacedEvent event) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(
                 message,
@@ -36,7 +37,7 @@ public class EmailService {
         String htmlContent = templateEngine.process("email-order-placed", context);
 
         helper.setTo(event.customerId());
-        helper.setFrom(mailConfig.getFrom());
+        helper.setFrom(mailConfig.getFrom(), "ByteBites Inc");
         helper.setSubject("Order Confirmation #" + event.orderId());
         helper.setText(htmlContent, true);
 
